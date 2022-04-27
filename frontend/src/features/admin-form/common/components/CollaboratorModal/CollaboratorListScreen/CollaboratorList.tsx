@@ -39,7 +39,8 @@ const RemoveCollaboratorButton = (
 export const CollaboratorList = (): JSX.Element => {
   const isMobile = useIsMobile()
   // Admin form data required for checking for duplicate emails.
-  const { handleForwardToTransferOwnership } = useCollaboratorWizard()
+  const { handleForwardToTransferOwnership, handleForwardToRemoveSelf } =
+    useCollaboratorWizard()
   const {
     collaborators,
     user,
@@ -105,6 +106,11 @@ export const CollaboratorList = (): JSX.Element => {
   const handleRemoveCollaborator = useCallback(
     (row: typeof list[number]) => () => {
       if (!canEditCollaborators || !collaborators || areMutationsLoading) return
+
+      if (row.email === user?.email) {
+        return handleForwardToRemoveSelf()
+      }
+
       // May seem redundant since we already have the email, but this may prevent
       // issues arising from desync between `list` and `collaborators`.
       const permissionToRemove: FormPermission = {
@@ -120,7 +126,9 @@ export const CollaboratorList = (): JSX.Element => {
       areMutationsLoading,
       canEditCollaborators,
       collaborators,
+      handleForwardToRemoveSelf,
       mutateRemoveCollaborator,
+      user?.email,
     ],
   )
 
@@ -175,7 +183,6 @@ export const CollaboratorList = (): JSX.Element => {
                       .email === row.email
                   }
                   isDisabled={areMutationsLoading}
-                  // TODO: Add handling for removing self as collaborator.
                   onClick={handleRemoveCollaborator(row)}
                 />
               </Stack>
@@ -184,7 +191,7 @@ export const CollaboratorList = (): JSX.Element => {
                 {isCurrentUser ? (
                   <RemoveCollaboratorButton
                     isDisabled={areMutationsLoading}
-                    // TODO: Add handling for removing self as collaborator.
+                    onClick={handleForwardToRemoveSelf}
                   />
                 ) : (
                   <Spacer w="2.75rem" />
